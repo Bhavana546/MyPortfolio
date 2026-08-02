@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bhavana Kolluri — Builder in AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1917;
+    --bg-alt:#152321;
+    --card:#1A2624;
+    --card-hover:#20302D;
+    --line:#2A3936;
+    --text:#EAEFEA;
+    --muted:#93A69F;
+    --muted-dim:#647670;
+    --amber:#E7A33E;
+    --sage:#7FB78A;
+    --coral:#E0714B;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--amber);color:#0F1917;}
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+  @media(max-width:640px){.wrap{padding:0 20px;}}
+
+  /* ---------- nav ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(15,25,23,0.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;max-width:1180px;margin:0 auto;}
+  .logo{font-family:var(--display);font-size:17px;font-weight:600;color:var(--text);letter-spacing:0.2px;}
+  .navlinks{display:flex;gap:28px;font-family:var(--mono);font-size:13px;color:var(--muted);}
+  .navlinks a:hover{color:var(--text);}
+  @media(max-width:640px){
+    nav{flex-wrap:wrap;gap:14px;padding:16px 20px;}
+    .navlinks{gap:16px;font-size:12px;order:2;width:100%;justify-content:flex-start;}
+  }
+
+  /* ---------- hero ---------- */
+  .hero{padding:88px 0 40px;position:relative;}
+  .eyebrow{
+    font-family:var(--mono);font-size:13px;color:var(--sage);
+    display:flex;align-items:center;gap:10px;margin-bottom:22px;
+  }
+  .eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--sage);box-shadow:0 0 0 4px rgba(127,183,138,0.15);}
+  h1.title{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:clamp(38px,6vw,68px);
+    line-height:1.04;
+    letter-spacing:-1.5px;
+    max-width:900px;
+  }
+  h1.title .accent{color:var(--amber);}
+  .hero-sub{
+    margin-top:22px;max-width:620px;color:var(--muted);font-size:17px;
+  }
+  .hero-actions{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap;}
+  .btn{
+    font-family:var(--mono);font-size:13.5px;padding:12px 20px;border-radius:7px;
+    border:1px solid var(--line);display:inline-flex;align-items:center;gap:8px;
+    transition:all .15s ease;
+  }
+  .btn-primary{background:var(--amber);color:#0F1917;border-color:var(--amber);font-weight:600;}
+  .btn-primary:hover{background:#f0b256;}
+  .btn-ghost:hover{border-color:var(--amber);color:var(--amber);}
+
+  /* terminal card */
+  .terminal{
+    margin-top:56px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    max-width:640px;
+    box-shadow:0 30px 60px -30px rgba(0,0,0,0.6);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;padding:11px 14px;
+    background:var(--bg-alt);border-bottom:1px solid var(--line);
+  }
+  .dot{width:10px;height:10px;border-radius:50%;}
+  .dot.r{background:#e0714b;} .dot.y{background:#e7a33e;} .dot.g{background:#7fb78a;}
+  .terminal-title{font-family:var(--mono);font-size:11.5px;color:var(--muted-dim);margin-left:6px;}
+  .terminal-body{padding:20px 22px;font-family:var(--mono);font-size:13.5px;color:var(--muted);min-height:150px;}
+  .terminal-body .prompt{color:var(--sage);}
+  .terminal-body .out{color:var(--text);}
+  .cursor{display:inline-block;width:7px;height:15px;background:var(--amber);vertical-align:middle;margin-left:2px;animation:blink 1s step-start infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  /* build log ticker — signature element */
+  .ticker-wrap{
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    background:var(--bg-alt);
+    overflow:hidden;white-space:nowrap;padding:13px 0;margin-top:64px;
+  }
+  .ticker-track{display:inline-flex;gap:0;animation:scroll 46s linear infinite;}
+  .ticker-track:hover{animation-play-state:paused;}
+  .ticker-item{
+    font-family:var(--mono);font-size:12.5px;color:var(--muted-dim);
+    padding:0 26px;border-right:1px solid var(--line);white-space:nowrap;
+  }
+  .ticker-item .hash{color:var(--sage);}
+  .ticker-item .msg{color:var(--muted);}
+  @keyframes scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+  /* ---------- section shell ---------- */
+  section{padding:96px 0;scroll-margin-top:90px;}
+  .section-head{margin-bottom:48px;}
+  .kicker{font-family:var(--mono);font-size:12.5px;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+  h2{font-family:var(--display);font-size:clamp(26px,4vw,38px);font-weight:600;letter-spacing:-0.5px;}
+  .section-desc{color:var(--muted);max-width:560px;margin-top:12px;font-size:15.5px;}
+
+  /* ---------- stats ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .stat{padding:28px 24px;border-right:1px solid var(--line);}
+  .stat:last-child{border-right:none;}
+  .stat-num{font-family:var(--display);font-size:34px;font-weight:700;color:var(--amber);}
+  .stat-label{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px;}
+  @media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr);}.stat{border-bottom:1px solid var(--line);}}
+
+  /* ---------- about ---------- */
+  .about-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:56px;align-items:start;}
+  .about-text p{color:var(--muted);font-size:16px;margin-bottom:16px;}
+  .about-text strong{color:var(--text);font-weight:600;}
+  .edu-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:24px;}
+  .edu-card .school{font-family:var(--display);font-size:17px;font-weight:600;}
+  .edu-card .degree{color:var(--muted);font-size:14px;margin-top:6px;}
+  .edu-card .dates{font-family:var(--mono);font-size:12px;color:var(--amber);margin-top:12px;}
+  .coursework{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;}
+  .pill{font-family:var(--mono);font-size:11.5px;color:var(--sage);border:1px solid var(--line);padding:4px 10px;border-radius:20px;}
+  @media(max-width:800px){.about-grid{grid-template-columns:1fr;}}
+
+  /* ---------- timeline (experience) ---------- */
+  .timeline{border-left:1px solid var(--line);margin-left:6px;}
+  .tl-item{position:relative;padding:0 0 44px 34px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-item::before{
+    content:"";position:absolute;left:-6px;top:4px;width:11px;height:11px;border-radius:50%;
+    background:var(--bg);border:2px solid var(--amber);
+  }
+  .tl-role{font-family:var(--display);font-size:19px;font-weight:600;}
+  .tl-org{color:var(--amber);font-family:var(--mono);font-size:13px;margin-top:4px;}
+  .tl-dates{font-family:var(--mono);font-size:12px;color:var(--muted-dim);margin-top:4px;}
+  .tl-list{margin-top:14px;color:var(--muted);font-size:14.5px;}
+  .tl-list li{margin-bottom:7px;padding-left:16px;position:relative;}
+  .tl-list li::before{content:"—";position:absolute;left:0;color:var(--muted-dim);}
+  .tl-links{margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;}
+  .tl-links a{font-family:var(--mono);font-size:12px;color:var(--sage);border-bottom:1px dotted var(--sage);}
+  .tl-links a:hover{color:var(--amber);border-color:var(--amber);}
+
+  /* ---------- featured projects ---------- */
+  .featured-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;}
+  @media(max-width:800px){.featured-grid{grid-template-columns:1fr;}}
+  .feat-card{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:28px;
+    display:flex;flex-direction:column;height:100%;transition:border-color .15s ease, transform .15s ease;
+  }
+  .feat-card:hover{border-color:var(--amber);transform:translateY(-3px);}
+  .feat-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+  .feat-name{font-family:var(--display);font-size:20px;font-weight:600;}
+  .feat-date{font-family:var(--mono);font-size:11px;color:var(--muted-dim);white-space:nowrap;margin-left:10px;}
+  .feat-desc{color:var(--muted);font-size:14.5px;flex-grow:1;}
+  .feat-stack{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px;}
+  .tag{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--bg-alt);border:1px solid var(--line);padding:3px 9px;border-radius:5px;}
+  .feat-links{margin-top:18px;display:flex;gap:16px;}
+  .feat-links a{font-family:var(--mono);font-size:12.5px;color:var(--amber);display:flex;align-items:center;gap:5px;}
+  .feat-links a:hover{color:var(--sage);}
+
+  /* ---------- filter tabs ---------- */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;}
+  .filter-btn{
+    font-family:var(--mono);font-size:12.5px;padding:9px 16px;border-radius:20px;
+    border:1px solid var(--line);color:var(--muted);cursor:pointer;background:transparent;transition:all .15s ease;
+  }
+  .filter-btn:hover{color:var(--text);border-color:var(--muted);}
+  .filter-btn.active{background:var(--amber);color:#0F1917;border-color:var(--amber);font-weight:600;}
+
+  /* ---------- project grid ---------- */
+  .proj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  @media(max-width:900px){.proj-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:600px){.proj-grid{grid-template-columns:1fr;}}
+  .proj-card{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;
+    transition:border-color .15s ease, transform .15s ease; display:flex;flex-direction:column;
+  }
+  .proj-card:hover{border-color:var(--sage);transform:translateY(-2px);}
+  .proj-name{font-family:var(--display);font-size:16px;font-weight:600;margin-bottom:8px;}
+  .proj-desc{color:var(--muted);font-size:13px;flex-grow:1;}
+  .proj-meta{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+  .lang-tag{font-family:var(--mono);font-size:11px;color:var(--sage);display:flex;align-items:center;gap:6px;}
+  .lang-dot{width:8px;height:8px;border-radius:50%;background:var(--sage);}
+  .proj-links{display:flex;gap:12px;}
+  .proj-links a{font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+  .proj-links a:hover{color:var(--amber);}
+  .proj-card[data-cat]{display:none;}
+  .proj-card.show{display:flex;}
+
+  /* ---------- skills ---------- */
+  .skills-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:28px;}
+  @media(max-width:800px){.skills-grid{grid-template-columns:1fr;}}
+  .skill-group{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:24px;}
+  .skill-group h3{font-family:var(--mono);font-size:12.5px;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
+  .skill-tags{display:flex;flex-wrap:wrap;gap:8px;}
+  .skill-tags span{font-family:var(--mono);font-size:12.5px;color:var(--text);background:var(--bg-alt);border:1px solid var(--line);padding:6px 12px;border-radius:6px;}
+
+  /* ---------- achievements / certs ---------- */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:56px;}
+  @media(max-width:800px){.two-col{grid-template-columns:1fr;}}
+  .list-card{border-bottom:1px solid var(--line);padding:18px 0;}
+  .list-card:first-child{padding-top:0;}
+  .list-card .lc-title{font-family:var(--display);font-weight:600;font-size:15.5px;}
+  .list-card .lc-sub{color:var(--muted);font-size:13.5px;margin-top:4px;}
+  .list-card .lc-tag{font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:6px;display:inline-block;}
+
+  /* ---------- footer / contact ---------- */
+  footer{border-top:1px solid var(--line);padding:80px 0 40px;}
+  .contact-inner{text-align:center;}
+  .contact-inner h2{font-size:clamp(30px,5vw,50px);}
+  .contact-links{display:flex;justify-content:center;gap:16px;margin-top:32px;flex-wrap:wrap;}
+  .foot-bottom{margin-top:80px;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:12px;color:var(--muted-dim);flex-wrap:wrap;gap:12px;}
+
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <div class="logo">Bhavana Kolluri</div>
+    <div class="navlinks">
+      <a href="javascript:void(0)" data-scroll="work">work</a>
+      <a href="javascript:void(0)" data-scroll="experience">experience</a>
+      <a href="javascript:void(0)" data-scroll="skills">skills</a>
+      <a href="javascript:void(0)" data-scroll="achievements">achievements</a>
+    </div>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <!-- HERO -->
+  <section class="hero" style="padding-top:64px;">
+    <div class="eyebrow">open to internships &amp; SDE roles · Vijayawada, India</div>
+    <h1 class="title">I ship working software <span class="accent">faster than most people write specs.</span></h1>
+    <p class="hero-sub">Bhavana Kolluri — CSE (AI &amp; Data Science) undergrad who treats Claude, Copilot and prompt engineering as part of the toolchain, not a shortcut. 28 public repos and one internship turning raw data into dashboards people actually use.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://github.com/Bhavana546" target="_blank" rel="noopener">View GitHub · 28 repos</a>
+      <a class="btn btn-ghost" href="mailto:kolluribhavana1@gmail.com">kolluribhavana1@gmail.com</a>
+      <a class="btn btn-ghost" href="https://linkedin.com/in/bhavana-kolluri-40785632a/" target="_blank" rel="noopener">LinkedIn</a>
+      <a class="btn btn-ghost" href="Bhavana_Kolluri_Resume.pdf" target="_blank" rel="noopener">Download résumé ↓</a>
+    </div>
+
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="terminal-title">bhavana@dev — zsh</span>
+      </div>
+      <div class="terminal-body" id="termBody"></div>
+    </div>
+  </section>
+
+  <!-- SIGNATURE BUILD LOG TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <!-- STATS -->
+  <section style="padding-top:72px;">
+    <div class="stats">
+      <div class="stat"><div class="stat-num">28</div><div class="stat-label">public repositories</div></div>
+      <div class="stat"><div class="stat-num">9</div><div class="stat-label">full AI-powered products</div></div>
+      <div class="stat"><div class="stat-num">5</div><div class="stat-label">certifications, incl. AWS AI</div></div>
+      <div class="stat"><div class="stat-num">3</div><div class="stat-label">hackathon / challenge podiums</div></div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <div class="kicker">Profile</div>
+        <h2 style="margin-bottom:20px;">Builder first, student second.</h2>
+        <p>I'm a Software Engineering student who builds real, working applications with <strong>Python, C++, JavaScript</strong> and modern web stacks — and I lean hard on AI tooling (<strong>Claude, GitHub Copilot, Gemini, Cursor</strong>) to move from problem statement to shipped product in days, not months.</p>
+        <p>My projects sit at the intersection of <strong>machine learning, generative AI and real user problems</strong>: a mental-health platform with crisis escalation, a patient-triage system with explainable risk scores, a study-abroad assistant with a full auth and chat stack. I'm an active hackathon participant and a quick, independent learner — I'd rather debug my own mistake than wait for someone to hand me the answer.</p>
+      </div>
+      <div class="edu-card reveal">
+        <div class="school">Siddhartha Academy of Higher Education</div>
+        <div class="degree">B.Tech, Computer Science &amp; Engineering<br/>(Artificial Intelligence &amp; Data Science)</div>
+        <div class="dates">July 2024 — 2028 · Vijayawada, India</div>
+        <div class="coursework">
+          <span class="pill">Data Structures &amp; Algorithms</span>
+          <span class="pill">Artificial Intelligence</span>
+          <span class="pill">Machine Learning</span>
+          <span class="pill">DBMS (Oracle SQL)</span>
+          <span class="pill">Operating Systems</span>
+          <span class="pill">Computer Architecture</span>
+          <span class="pill">Software Engineering</span>
+          <span class="pill">Design Thinking</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section id="experience">
+    <div class="section-head reveal">
+      <div class="kicker">Experience</div>
+      <h2>Where I've put this to work</h2>
+    </div>
+    <div class="timeline">
+      <div class="tl-item reveal">
+        <div class="tl-role">Data Science with Gen AI Intern</div>
+        <div class="tl-org">Innovexis</div>
+        <div class="tl-dates">April 2026 — July 2026</div>
+        <ul class="tl-list">
+          <li>Used Claude, GitHub Copilot, Gemini and NotebookLM alongside prompt engineering for data analysis and automation work.</li>
+          <li>Built interactive dashboards with Streamlit and Plotly, AI-assisted end to end.</li>
+          <li>Automated data preprocessing and feature engineering pipelines to turn raw data into actionable insight.</li>
+        </ul>
+        <div class="tl-links">
+          <a href="https://github.com/Bhavana546/Zomato-Sentiment-Analysis-ML" target="_blank" rel="noopener">Zomato Sentiment Analysis ↗</a>
+          <a href="https://github.com/Bhavana546/Real_Estate_Investment_Advisor" target="_blank" rel="noopener">Real Estate Investment Advisor ↗</a>
+          <a href="https://github.com/Bhavana546/PhonePe_Transaction_Insights_and_Prediction" target="_blank" rel="noopener">PhonePe Transaction Insights ↗</a>
+          <a href="https://github.com/Bhavana546/Tourism_Analytics_Project" target="_blank" rel="noopener">Tourism Analytics ↗</a>
+          <a href="https://github.com/Bhavana546/Bird_Species_Observation_Analysis" target="_blank" rel="noopener">Bird Species Observation ↗</a>
+          <a href="https://github.com/Bhavana546/Shopper_Spectrum_Customer_Segmentation" target="_blank" rel="noopener">Shopper Spectrum Segmentation ↗</a>
+        </div>
+      </div>
+      <div class="tl-item reveal">
+        <div class="tl-role">Frontend Web Developer Intern</div>
+        <div class="tl-org">AICTE</div>
+        <div class="tl-dates">Aug 2025 — Oct 2025</div>
+        <ul class="tl-list">
+          <li>Built a Smart Student Planner web app with HTML, CSS and JavaScript to help students organize tasks and schedules.</li>
+          <li>Implemented responsive UI components for task management and scheduling.</li>
+          <li>Applied core frontend concepts to ship a genuinely usable productivity tool.</li>
+        </ul>
+        <div class="tl-links">
+          <a href="https://github.com/Bhavana546/Smart-Study-Planner" target="_blank" rel="noopener">Repo ↗</a>
+          <a href="https://bhavana546.github.io/Smart-Study-Planner/" target="_blank" rel="noopener">Live demo ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALL PROJECTS -->
+  <section id="work">
+    <div class="section-head reveal">
+      <div class="kicker">All work · github.com/Bhavana546</div>
+      <h2>28 repositories, filtered by kind</h2>
+      <p class="section-desc">Everything public — genAI products, ML/data analysis, web builds and core programming reps. Every card links straight to the code.</p>
+    </div>
+
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-filter="all">All (28)</button>
+      <button class="filter-btn" data-filter="genai">AI &amp; GenAI Products</button>
+      <button class="filter-btn" data-filter="ml">Data Science &amp; ML</button>
+      <button class="filter-btn" data-filter="web">Web Development</button>
+      <button class="filter-btn" data-filter="core">Core Programming</button>
+    </div>
+
+    <div class="proj-grid" id="projGrid"></div>
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <div class="section-head reveal">
+      <div class="kicker">Toolbox</div>
+      <h2>What I build with</h2>
+    </div>
+    <div class="skills-grid">
+      <div class="skill-group reveal">
+        <h3>Languages</h3>
+        <div class="skill-tags"><span>Python</span><span>Java</span><span>C++</span><span>JavaScript</span><span>TypeScript</span></div>
+      </div>
+      <div class="skill-group reveal">
+        <h3>Web &amp; Data</h3>
+        <div class="skill-tags"><span>HTML</span><span>CSS</span><span>React.js</span><span>Node.js</span><span>Tailwind CSS</span><span>REST APIs</span><span>Oracle SQL</span><span>PostgreSQL</span></div>
+      </div>
+      <div class="skill-group reveal">
+        <h3>AI Tools &amp; Skills</h3>
+        <div class="skill-tags"><span>Claude</span><span>GitHub Copilot</span><span>Gemini</span><span>ChatGPT</span><span>Cursor</span><span>NotebookLM</span><span>Prompt Engineering</span><span>RAG</span><span>Workflow Automation</span></div>
+      </div>
+      <div class="skill-group reveal">
+        <h3>Machine Learning &amp; Data Science</h3>
+        <div class="skill-tags"><span>Scikit-learn</span><span>NumPy</span><span>Pandas</span><span>EDA</span><span>Feature Engineering</span><span>PCA</span><span>Data Normalization</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACHIEVEMENTS / CERTS -->
+  <section id="achievements">
+    <div class="section-head reveal">
+      <div class="kicker">Proof of work</div>
+      <h2>Achievements &amp; certifications</h2>
+    </div>
+    <div class="two-col">
+      <div class="reveal">
+        <div class="kicker" style="margin-bottom:16px;">Achievements</div>
+        <div class="list-card">
+          <div class="lc-title">1st Prize — Webathon</div>
+          <div class="lc-sub">VRSEC ACM Student Chapter · web development competition</div>
+        </div>
+        <div class="list-card">
+          <div class="lc-title">2nd Prize — MLSA Ignite Expo Ideathon</div>
+          <div class="lc-sub">Presented an original solution live at the Ignite Expo</div>
+        </div>
+        <div class="list-card">
+          <div class="lc-title">3rd Prize — UI/UX Challenge</div>
+          <div class="lc-sub">College Tech Event · UI/UX design challenge</div>
+        </div>
+        <div class="kicker" style="margin:36px 0 16px;">Positions of Responsibility</div>
+        <div class="list-card">
+          <div class="lc-title">ML Co-Lead — Microsoft Learn Student Club (MLSC)</div>
+          <div class="lc-sub">Leadership, event management, technical workshops</div>
+        </div>
+        <div class="list-card">
+          <div class="lc-title">Academic Support Volunteer — Make A Difference (NGO)</div>
+          <div class="lc-sub">Student mentorship and community engagement</div>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="kicker" style="margin-bottom:16px;">Certifications</div>
+        <div class="list-card">
+          <div class="lc-title">AWS Certified AI Practitioner</div>
+          <div class="lc-sub">AWS Cloud, ML, Generative AI</div>
+        </div>
+        <div class="list-card">
+          <div class="lc-title">AWS re/Start Graduate</div>
+          <div class="lc-sub">Amazon Web Services Training &amp; Certification</div>
+        </div>
+        <div class="list-card">
+          <div class="lc-title">CLA — Programming Essentials in C</div>
+          <div class="lc-sub">Cisco Networking Academy</div>
+        </div>
+        <div class="list-card">
+          <div class="lc-title">PCAP — Programming Essentials in Python</div>
+          <div class="lc-sub">Cisco Networking Academy</div>
+        </div>
+        <div class="list-card">
+          <div class="lc-title">The Joy of Computing Using Python</div>
+          <div class="lc-sub">NPTEL, IIT Madras</div>
+        </div>
+        <div class="kicker" style="margin:36px 0 16px;">Coding profiles</div>
+        <div class="skill-tags">
+          <a href="https://leetcode.com/u/Bhavana_100/" target="_blank" rel="noopener"><span>LeetCode ↗</span></a>
+          <a href="https://www.hackerrank.com/profile/kolluribhavana1" target="_blank" rel="noopener"><span>HackerRank ↗</span></a>
+          <a href="https://www.codechef.com/users/jolly_fury_40" target="_blank" rel="noopener"><span>CodeChef ↗</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer id="contact">
+  <div class="wrap contact-inner">
+    <div class="kicker">Get in touch</div>
+    <h2>Building something worth<br/>looking at? Let's talk.</h2>
+    <div class="contact-links">
+      <a class="btn btn-primary" href="mailto:kolluribhavana1@gmail.com">kolluribhavana1@gmail.com</a>
+      <a class="btn btn-ghost" href="tel:+918328690969">+91 83286 90969</a>
+      <a class="btn btn-ghost" href="https://github.com/Bhavana546" target="_blank" rel="noopener">GitHub ↗</a>
+      <a class="btn btn-ghost" href="https://linkedin.com/in/bhavana-kolluri-40785632a/" target="_blank" rel="noopener">LinkedIn ↗</a>
+    </div>
+    <div class="foot-bottom wrap" style="max-width:1180px;">
+      <span>© 2026 Bhavana Kolluri</span>
+      <span>Vijayawada, Andhra Pradesh, India</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ---------- project data ----------
+const projects = [
+  // AI & GenAI products
+  {name:"SilentStruggles", desc:"AI-powered mental health platform — mood tracking, NLP sentiment analysis, crisis escalation. Built solo with Claude.", lang:"HTML", cat:"genai", url:"https://github.com/Bhavana546/SilentStruggles"},
+  {name:"AI_Productivity_Tool", desc:"AI-powered productivity assistant built with Streamlit and Google Gemini.", lang:"Python", cat:"genai", url:"https://github.com/Bhavana546/AI_Productivity_Tool", demo:"https://aiappuctivitytool-bhavana.streamlit.app/"},
+  {name:"PropVisionAI", desc:"AI-assisted real-estate / property analysis tool.", lang:"Python", cat:"genai", url:"https://github.com/Bhavana546/PropVisionAI"},
+  {name:"AI-Powered-Smart-Patient-Triage-System", desc:"ML-based patient triage with explainable risk scoring and department recommendations.", lang:"HTML", cat:"genai", url:"https://github.com/Bhavana546/AI-Powered-Smart-Patient-Triage-System"},
+  {name:"AI_Resume_Assistant", desc:"AI assistant for resume review and improvement suggestions.", lang:"Python", cat:"genai", url:"https://github.com/Bhavana546/AI_Resume_Assistant"},
+  {name:"StudentSentimentAnalyzer-Bot", desc:"Bot that analyzes student sentiment to surface feedback signals.", lang:"—", cat:"genai", url:"https://github.com/Bhavana546/StudentSentimentAnalyzer-Bot"},
+  {name:"ai-study-abroad-frontend", desc:"React/TypeScript frontend for the AI study-abroad assistant.", lang:"TypeScript", cat:"genai", url:"https://github.com/Bhavana546/ai-study-abroad-frontend", demo:"https://ai-study-abroad-frontend.vercel.app"},
+  {name:"ai_study_abroad_backend", desc:"Node/REST backend powering auth, chat history and the AI study-abroad assistant.", lang:"Python", cat:"genai", url:"https://github.com/Bhavana546/ai_study_abroad_backend"},
+  {name:"POC-for-The-Healthcare-Management-System-Using-AI", desc:"Proof of concept for an AI-driven healthcare management system.", lang:"—", cat:"genai", url:"https://github.com/Bhavana546/POC-for-The-Healthcare-Management-System-Using-AI"},
+
+  // Data Science & ML
+  {name:"Shopper_Spectrum_Customer_Segmentation", desc:"Customer segmentation analysis for retail shopper behavior.", lang:"Jupyter Notebook", cat:"ml", url:"https://github.com/Bhavana546/Shopper_Spectrum_Customer_Segmentation"},
+  {name:"Bird_Species_Observation_Analysis", desc:"Exploratory analysis of bird species observation data.", lang:"Jupyter Notebook", cat:"ml", url:"https://github.com/Bhavana546/Bird_Species_Observation_Analysis"},
+  {name:"Tourism_Analytics_Project", desc:"Analytics project uncovering tourism trends and patterns.", lang:"Jupyter Notebook", cat:"ml", url:"https://github.com/Bhavana546/Tourism_Analytics_Project"},
+  {name:"PhonePe_Transaction_Insights_and_Prediction", desc:"Transaction insight and prediction modeling on PhonePe-style payments data.", lang:"Jupyter Notebook", cat:"ml", url:"https://github.com/Bhavana546/PhonePe_Transaction_Insights_and_Prediction"},
+  {name:"Real_Estate_Investment_Advisor", desc:"Data-driven advisor for evaluating real-estate investment options.", lang:"Jupyter Notebook", cat:"ml", url:"https://github.com/Bhavana546/Real_Estate_Investment_Advisor"},
+  {name:"Zomato-Sentiment-Analysis-ML", desc:"Sentiment analysis on restaurant reviews using NLP and machine learning.", lang:"Jupyter Notebook", cat:"ml", url:"https://github.com/Bhavana546/Zomato-Sentiment-Analysis-ML"},
+  {name:"Heart-Disease-Prediction-ML", desc:"Classification model predicting heart disease risk from patient data.", lang:"Jupyter Notebook", cat:"ml", url:"https://github.com/Bhavana546/Heart-Disease-Prediction-ML"},
+  {name:"ML-Housing-Price-Prediction", desc:"Regression model estimating housing prices from key features.", lang:"Jupyter Notebook", cat:"ml", url:"https://github.com/Bhavana546/ML-Housing-Price-Prediction"},
+  {name:"Titanic-ML-Journey", desc:"Classic Titanic survival-prediction walkthrough — EDA to model.", lang:"Jupyter Notebook", cat:"ml", url:"https://github.com/Bhavana546/Titanic-ML-Journey"},
+  {name:"DiabetesRiskPredictor-ML", desc:"ML model predicting diabetes risk from health indicators.", lang:"Python", cat:"ml", url:"https://github.com/Bhavana546/DiabetesRiskPredictor-ML"},
+  {name:"analytics-internship", desc:"Internship analytics work — data processing and insight generation.", lang:"TypeScript", cat:"ml", url:"https://github.com/Bhavana546/analytics-internship"},
+
+  // Web dev
+  {name:"Smart-Study-Planner", desc:"Web app that helps students organize tasks, schedules and assignments.", lang:"JavaScript", cat:"web", url:"https://github.com/Bhavana546/Smart-Study-Planner", demo:"https://bhavana546.github.io/Smart-Study-Planner/"},
+  {name:"CameraLandingPage", desc:"Responsive landing page for a camera brand with smooth animations.", lang:"HTML", cat:"web", url:"https://github.com/Bhavana546/CameraLandingPage", demo:"https://bhavana546.github.io/CameraLandingPage/"},
+  {name:"Computer_Institution", desc:"Website build for a computer training institution.", lang:"HTML", cat:"web", url:"https://github.com/Bhavana546/Computer_Institution"},
+  {name:"AnimateItNow-Bhavana", desc:"Open-source contribution (GirlScript SoC) — added a chatbot feature.", lang:"HTML", cat:"web", url:"https://github.com/Bhavana546/AnimateItNow-Bhavana", demo:"https://animate-it-now.netlify.app/"},
+  {name:"Arithmotech", desc:"Web build exploring interactive arithmetic / math tooling.", lang:"HTML", cat:"web", url:"https://github.com/Bhavana546/Arithmotech"},
+  {name:"Little_taco_shop_project", desc:"Restaurant-style front-end project for a taco shop.", lang:"HTML", cat:"web", url:"https://github.com/Bhavana546/Little_taco_shop_project"},
+
+  // Core programming
+  {name:"CppBasics-Part1", desc:"Foundational C++ problem-solving exercises.", lang:"C++", cat:"core", url:"https://github.com/Bhavana546/CppBasics-Part1"},
+  {name:"kivy-rps-showdown", desc:"Rock-paper-scissors game built with Kivy for Android.", lang:"KvLang", cat:"core", url:"https://github.com/Bhavana546/kivy-rps-showdown"},
+];
+
+const grid = document.getElementById('projGrid');
+projects.forEach(p=>{
+  const card = document.createElement('div');
+  card.className = 'proj-card show';
+  card.setAttribute('data-cat', p.cat);
+  card.innerHTML = `
+    <div class="proj-name">${p.name}</div>
+    <div class="proj-desc">${p.desc}</div>
+    <div class="proj-meta">
+      <span class="lang-tag"><span class="lang-dot"></span>${p.lang}</span>
+      <span class="proj-links">
+        ${p.demo ? `<a href="${p.demo}" target="_blank" rel="noopener">live</a>` : ``}
+        <a href="${p.url}" target="_blank" rel="noopener">code ↗</a>
+      </span>
+    </div>
+  `;
+  grid.appendChild(card);
+});
+
+document.getElementById('filters').addEventListener('click', (e)=>{
+  if(!e.target.classList.contains('filter-btn')) return;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  const f = e.target.getAttribute('data-filter');
+  document.querySelectorAll('.proj-card').forEach(c=>{
+    c.classList.toggle('show', f==='all' || c.getAttribute('data-cat')===f);
+  });
+});
+
+// ---------- build log ticker ----------
+const logEntries = [
+  {h:"a91f3c", m:"SilentStruggles — crisis escalation flow"},
+  {h:"7e2b0d", m:"AI-Powered-Smart-Patient-Triage-System — risk model"},
+  {h:"c14a92", m:"ai-study-abroad-frontend — chat UI shipped"},
+  {h:"5f0d1e", m:"Zomato-Sentiment-Analysis-ML — NLP pipeline"},
+  {h:"b8317a", m:"AI_Productivity_Tool — deployed to Streamlit"},
+  {h:"e2c9f4", m:"AnimateItNow-Bhavana — chatbot feature (GSSoC)"},
+  {h:"3d7a11", m:"PropVisionAI — initial commit"},
+  {h:"9a04c6", m:"Smart-Study-Planner — live on GitHub Pages"},
+  {h:"1cf88b", m:"Real_Estate_Investment_Advisor — feature engineering"},
+  {h:"6b21fe", m:"PhonePe_Transaction_Insights_and_Prediction — model v1"},
+];
+const track = document.getElementById('tickerTrack');
+[...logEntries, ...logEntries].forEach(e=>{
+  const item = document.createElement('span');
+  item.className = 'ticker-item';
+  item.innerHTML = `<span class="hash">#${e.h}</span> <span class="msg">${e.m}</span>`;
+  track.appendChild(item);
+});
+
+// ---------- terminal typing effect ----------
+const termBody = document.getElementById('termBody');
+const termLines = [
+  {p:"$ whoami", o:"bhavana-kolluri — B.Tech CSE (AI & DS), 2028"},
+  {p:"$ cat toolkit.txt", o:"Python · C++ · JavaScript · Claude · Copilot · Gemini"},
+  {p:"$ ls projects/ | wc -l", o:"28"},
+  {p:"$ echo $STATUS", o:"open to internships & SDE roles"},
+];
+let li=0, ci=0, typing=true;
+function typeTerm(){
+  if(li >= termLines.length){ return; }
+  const line = termLines[li];
+  const el = document.createElement('div');
+  const promptSpan = document.createElement('span');
+  promptSpan.className='prompt';
+  el.appendChild(promptSpan);
+  termBody.appendChild(el);
+
+  function typePrompt(){
+    if(ci < line.p.length){
+      promptSpan.textContent += line.p[ci];
+      ci++;
+      setTimeout(typePrompt, 28);
+    } else {
+      ci=0;
+      setTimeout(typeOut, 250);
+    }
+  }
+  const outEl = document.createElement('div');
+  outEl.className='out';
+  outEl.style.marginBottom='14px';
+  function typeOut(){
+    if(ci===0){ el.appendChild(outEl); }
+    if(ci < line.o.length){
+      outEl.textContent += line.o[ci];
+      ci++;
+      setTimeout(typeOut, 14);
+    } else {
+      ci=0; li++;
+      setTimeout(typeTerm, 260);
+    }
+  }
+  typePrompt();
+}
+typeTerm();
+
+// ---------- nav smooth scroll (avoids hash navigation) ----------
+document.querySelectorAll('[data-scroll]').forEach(link=>{
+  link.addEventListener('click', ()=>{
+    const target = document.getElementById(link.getAttribute('data-scroll'));
+    if(target){ target.scrollIntoView({behavior:'smooth', block:'start'}); }
+  });
+});
+
+// ---------- scroll reveal ----------
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+},{threshold:0.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+
+</body>
+</html>
